@@ -74,7 +74,7 @@ func _physics_process(delta: float) -> void:
 
 func altitude_km() -> float:
 	var earth_center := Vector3(0, 0, -7000)
-	return max(0.0, global_position.distance_to(earth_center) - 6371.0)
+	return max(0.0, global_position.distance_to(earth_center) - 6371.75)
 
 func speed_kms() -> float:
 	return linear_velocity.length() / 1000.0
