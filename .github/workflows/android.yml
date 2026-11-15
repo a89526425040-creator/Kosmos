@@ -86,10 +86,32 @@ jobs:
           echo "Configured ANDROID_HOME=$ANDROID_SDK_DIR"
 
       - name: Import project and validate scripts
-        run: godot --headless --editor --path . --quit
+        run: |
+          set -eu
+          LOG="$(mktemp)"
+          if ! godot --headless --editor --path . --quit >"$LOG" 2>&1; then
+            cat "$LOG"
+            exit 1
+          fi
+          cat "$LOG"
+          if grep -Eq 'SCRIPT ERROR:|ERROR: Failed to load script|Parse Error:|Compile Error:|Invalid call|Invalid assignment' "$LOG"; then
+            echo "Godot reported script errors during project import."
+            exit 1
+          fi
 
       - name: Run headless startup smoke test
-        run: godot --headless --path . --quit-after 3
+        run: |
+          set -eu
+          LOG="$(mktemp)"
+          if ! godot --headless --path . --quit-after 3 >"$LOG" 2>&1; then
+            cat "$LOG"
+            exit 1
+          fi
+          cat "$LOG"
+          if grep -Eq 'SCRIPT ERROR:|ERROR: Failed to load script|Parse Error:|Compile Error:|Invalid call|Invalid assignment' "$LOG"; then
+            echo "Godot reported script errors during startup."
+            exit 1
+          fi
 
       - name: Verify Android export prerequisites
         run: |
@@ -99,8 +121,18 @@ jobs:
 
       - name: Export Android debug APK
         run: |
+          set -eu
           mkdir -p build
-          godot --headless --path . --export-debug "Android" build/Kosmos.apk
+          LOG="$(mktemp)"
+          if ! godot --headless --path . --export-debug "Android" build/Kosmos.apk >"$LOG" 2>&1; then
+            cat "$LOG"
+            exit 1
+          fi
+          cat "$LOG"
+          if grep -Eq 'SCRIPT ERROR:|ERROR: Failed to load script|Parse Error:|Compile Error:|Invalid call|Invalid assignment|ERROR: Cannot export project|ERROR: Project export' "$LOG"; then
+            echo "Godot reported script or export errors."
+            exit 1
+          fi
           test -s build/Kosmos.apk
           file build/Kosmos.apk
 
