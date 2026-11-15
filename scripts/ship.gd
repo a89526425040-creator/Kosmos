@@ -38,7 +38,7 @@ func _physics_process(delta: float) -> void:
 	var side := lateral_input.x + Input.get_action_strength("ui_right") - Input.get_action_strength("ui_left")
 	var vertical := lateral_input.y + Input.get_action_strength("ui_up") - Input.get_action_strength("ui_down")
 	var basis_now := global_basis
-	var earth_center := Vector3(0, -1800, -6500)
+	var earth_center := Vector3(0, -1800, -2200)
 	var distance_km := max(100.0, global_position.distance_to(earth_center))
 	var radius_m := distance_km * 1000.0
 	var gravity := -((global_position - earth_center).normalized()) * earth_mu / (radius_m * radius_m)
@@ -66,14 +66,14 @@ func _physics_process(delta: float) -> void:
 	last_velocity = linear_velocity
 
 func altitude_km() -> float:
-	var earth_center := Vector3(0, -1800, -6500)
+	var earth_center := Vector3(0, -1800, -2200)
 	return max(0.0, global_position.distance_to(earth_center) - 1800.0)
 
 func speed_kms() -> float:
 	return linear_velocity.length() / 1000.0
 
 func gravity_value() -> float:
-	var r := max(100000.0, global_position.distance_to(Vector3(0, -1800, -6500)) * 1000.0)
+	var r := max(100000.0, global_position.distance_to(Vector3(0, -1800, -2200)) * 1000.0)
 	return earth_mu / (r * r)
 
 func air_density() -> float:
