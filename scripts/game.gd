@@ -99,6 +99,11 @@ func _build_ship() -> void:
 	ship.linear_damp = 0.0
 	ship.angular_damp = 0.0
 	add_child(ship)
+	var collision := CollisionShape3D.new()
+	var collision_box := BoxShape3D.new()
+	collision_box.size = Vector3(2.8, 1.5, 8.0)
+	collision.shape = collision_box
+	ship.add_child(collision)
 	var body := MeshInstance3D.new()
 	var mesh := BoxMesh.new()
 	mesh.size = Vector3(2.8, 1.5, 8.0)
