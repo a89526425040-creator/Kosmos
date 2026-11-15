@@ -154,7 +154,8 @@ func _build_vegetation() -> void:
 	trunk_mesh.top_radius = 0.08
 	trunk_mesh.bottom_radius = 0.12
 	trunk_mesh.height = 0.28
-	var leaf_mesh := ConeMesh.new()
+	var leaf_mesh := CylinderMesh.new()
+	leaf_mesh.top_radius = 0.0
 	leaf_mesh.bottom_radius = 0.38
 	leaf_mesh.height = 0.42
 	var grass_mesh := PrismMesh.new()
@@ -219,7 +220,7 @@ func _build_vegetation() -> void:
 func _update_atmosphere() -> void:
 	if not is_instance_valid(ship) or sky_material == null:
 		return
-	var altitude := ship.altitude_km()
+	var altitude: float = ship.altitude_km()
 	var fade := clampf(altitude / 95.0, 0.0, 1.0)
 	sky_material.sky_top_color = Color(0.10, 0.39, 0.78).lerp(Color(0.001, 0.003, 0.012), fade)
 	sky_material.sky_horizon_color = Color(0.48, 0.72, 0.92).lerp(Color(0.002, 0.004, 0.018), fade)
