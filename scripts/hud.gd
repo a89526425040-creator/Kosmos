@@ -1,8 +1,15 @@
 extends CanvasLayer
 
+const JOYSTICK_SCRIPT = preload("res://scripts/joystick.gd")
+
 var ship: Variant
 var labels := {}
 var screen_size := Vector2.ZERO
+var joystick_view: Control
+var left_touch := -1
+var right_touch := -1
+var left_value := Vector2.ZERO
+var right_value := Vector2.ZERO
 
 func _ready() -> void:
 	screen_size = get_viewport().get_visible_rect().size
@@ -24,24 +31,23 @@ func _build_ui() -> void:
 	title.add_theme_color_override("font_color", Color(0.25, 0.8, 1.0))
 	root.add_child(title)
 	for i in range(6):
-		var l := Label.new()
-		l.position = Vector2(30, 48 + i * 18)
-		l.add_theme_font_size_override("font_size", 13)
-		l.add_theme_color_override("font_color", Color(0.82, 0.9, 1.0))
-		root.add_child(l)
-		labels[i] = l
+		var label := Label.new()
+		label.position = Vector2(30, 48 + i * 18)
+		label.add_theme_font_size_override("font_size", 13)
+		label.add_theme_color_override("font_color", Color(0.82, 0.9, 1.0))
+		root.add_child(label)
+		labels[i] = label
 	var hint := Label.new()
-	hint.text = "W/S THRUST   ARROWS PITCH/YAW   Q/E ROLL"
-	hint.position = Vector2(18, screen_size.y - 28)
+	hint.text = "LEFT: FLIGHT DIRECTION                         RIGHT: THROTTLE / SPEED"
+	hint.position = Vector2(screen_size.x * 0.5 - 250, screen_size.y - 28)
 	hint.add_theme_font_size_override("font_size", 12)
-	hint.add_theme_color_override("font_color", Color(0.55, 0.72, 0.9))
+	hint.add_theme_color_override("font_color", Color(0.72, 0.84, 0.96))
 	root.add_child(hint)
-	_make_button(root, "THR+", Vector2(18, screen_size.y - 210), "forward")
-	_make_button(root, "THR−", Vector2(18, screen_size.y - 160), "back")
-	_make_button(root, "UP", Vector2(screen_size.x - 88, screen_size.y - 210), "up")
-	_make_button(root, "DOWN", Vector2(screen_size.x - 88, screen_size.y - 160), "down")
-	_make_button(root, "ROLL−", Vector2(screen_size.x - 168, screen_size.y - 105), "roll_left")
-	_make_button(root, "ROLL+", Vector2(screen_size.x - 88, screen_size.y - 105), "roll_right")
+	joystick_view = Control.new()
+	joystick_view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	joystick_view.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	joystick_view.set_script(JOYSTICK_SCRIPT)
+	root.add_child(joystick_view)
 	var cross := Label.new()
 	cross.text = "⊕"
 	cross.position = Vector2(screen_size.x * 0.5 - 12, screen_size.y * 0.5 - 18)
@@ -49,28 +55,9 @@ func _build_ui() -> void:
 	cross.add_theme_color_override("font_color", Color(0.3, 0.8, 1.0, 0.7))
 	root.add_child(cross)
 
-func _make_button(root: Control, caption: String, pos: Vector2, action: String) -> void:
-	var b := Button.new()
-	b.text = caption
-	b.position = pos
-	b.size = Vector2(68, 42)
-	b.modulate = Color(0.55, 0.85, 1.0, 0.82)
-	b.button_down.connect(func(): _set_action(action, true))
-	b.button_up.connect(func(): _set_action(action, false))
-	root.add_child(b)
-
-func _set_action(action: String, pressed: bool) -> void:
-	if not is_instance_valid(ship): return
-	match action:
-		"forward": ship.throttle = 1.0 if pressed else 0.0
-		"back": ship.throttle = -1.0 if pressed else 0.0
-		"up": ship.lateral_input.y = 1.0 if pressed else 0.0
-		"down": ship.lateral_input.y = -1.0 if pressed else 0.0
-		"roll_left": ship.roll_input = -1.0 if pressed else 0.0
-		"roll_right": ship.roll_input = 1.0 if pressed else 0.0
-
 func _process(_delta: float) -> void:
-	if not is_instance_valid(ship): return
+	if not is_instance_valid(ship):
+		return
 	labels[0].text = "ALTITUDE     %7.2f km" % ship.altitude_km()
 	labels[1].text = "VELOCITY     %7.3f km/s" % ship.speed_kms()
 	labels[2].text = "ACCEL        %7.2f m/s2" % ship.acceleration.length()
@@ -78,12 +65,49 @@ func _process(_delta: float) -> void:
 	labels[4].text = "AIR DENSITY  %.5f kg/m3" % ship.air_density()
 	labels[5].text = "FUEL         %5.1f%%" % (ship.fuel / ship.fuel_capacity * 100.0)
 
+func _apply_sticks() -> void:
+	if not is_instance_valid(ship):
+		return
+	ship.steering = Vector2(-left_value.x, left_value.y)
+	ship.throttle = clampf(-right_value.y, -1.0, 1.0)
+	if is_instance_valid(joystick_view):
+		joystick_view.left_value = left_value
+		joystick_view.right_value = right_value
+		joystick_view.queue_redraw()
+
 func _input(event: InputEvent) -> void:
-	if not is_instance_valid(ship): return
+	if not is_instance_valid(ship):
+		return
 	if event is InputEventScreenTouch:
-		if not event.pressed:
-			ship.steering = Vector2.ZERO
+		var left_center := Vector2(screen_size.x * 0.16, screen_size.y * 0.78)
+		var right_center := Vector2(screen_size.x * 0.84, screen_size.y * 0.78)
+		if event.pressed:
+			if event.position.distance_to(left_center) < screen_size.y * 0.23 and left_touch == -1:
+				left_touch = event.index
+				_update_stick(event.position, true)
+			elif event.position.distance_to(right_center) < screen_size.y * 0.23 and right_touch == -1:
+				right_touch = event.index
+				_update_stick(event.position, false)
+		else:
+			if event.index == left_touch:
+				left_touch = -1
+				left_value = Vector2.ZERO
+			if event.index == right_touch:
+				right_touch = -1
+				right_value = Vector2.ZERO
+			_apply_sticks()
 	elif event is InputEventScreenDrag:
-		var p: Vector2 = event.position
-		var center_x := screen_size.x * (0.25 if p.x < screen_size.x * 0.5 else 0.75)
-		ship.steering = Vector2(-(p.x - center_x) / 180.0, (p.y - screen_size.y * 0.7) / 180.0).limit_length(1.0)
+		if event.index == left_touch:
+			_update_stick(event.position, true)
+		elif event.index == right_touch:
+			_update_stick(event.position, false)
+
+func _update_stick(position: Vector2, is_left: bool) -> void:
+	var center := Vector2(screen_size.x * (0.16 if is_left else 0.84), screen_size.y * 0.78)
+	var radius := screen_size.y * 0.115
+	var value := ((position - center) / radius).limit_length(1.0)
+	if is_left:
+		left_value = value
+	else:
+		right_value = value
+	_apply_sticks()
