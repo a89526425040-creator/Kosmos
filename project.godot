@@ -1,0 +1,55 @@
+; COSMOS — Space Flight
+config_version=5
+
+[application]
+config/name="COSMOS — Space Flight"
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.4", "GL Compatibility")
+
+[display]
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/handheld/orientation=1
+window/stretch/mode="canvas_items"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+environment/defaults/default_clear_color=Color(0.002, 0.004, 0.018, 1)
+
+[physics]
+3d/default_gravity=0.0
+
+[input]
+thrust_forward={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":87)]
+}
+thrust_back={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":83)]
+}
+pitch_up={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":265)]
+}
+pitch_down={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":264)]
+}
+yaw_left={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":263)]
+}
+yaw_right={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":262)]
+}
+roll_left={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":81)]
+}
+roll_right={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":69)]
+}
