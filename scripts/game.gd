@@ -42,7 +42,7 @@ func _build_lighting() -> void:
 
 func _build_earth() -> void:
 	earth = Node3D.new()
-	earth.position = Vector3(0, -1800, -6500)
+	earth.position = Vector3(0, -1800, -2200)
 	add_child(earth)
 	var planet := MeshInstance3D.new()
 	var sphere := SphereMesh.new()
