@@ -154,7 +154,8 @@ jobs:
             exit 1
           fi
           test -s build/Kosmos.apk
-          file build/Kosmos.apk
+          ls -lh build/Kosmos.apk
+          sha256sum build/Kosmos.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
