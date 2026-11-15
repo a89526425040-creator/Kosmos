@@ -6,6 +6,10 @@ var ship: Variant
 var labels := {}
 var screen_size := Vector2.ZERO
 var joystick_view: Control
+var hint_label: Label
+var crosshair_label: Label
+var landscape_button: Button
+var portrait_button: Button
 var left_touch := -1
 var right_touch := -1
 var left_value := Vector2.ZERO
@@ -13,7 +17,24 @@ var right_value := Vector2.ZERO
 
 func _ready() -> void:
 	screen_size = get_viewport().get_visible_rect().size
+	get_viewport().size_changed.connect(_on_viewport_size_changed)
 	_build_ui()
+
+func _on_viewport_size_changed() -> void:
+	screen_size = get_viewport().get_visible_rect().size
+	if is_instance_valid(hint_label):
+		hint_label.position = Vector2(screen_size.x * 0.5 - 250, screen_size.y - 28)
+	if is_instance_valid(crosshair_label):
+		crosshair_label.position = Vector2(screen_size.x * 0.5 - 12, screen_size.y * 0.5 - 18)
+	if is_instance_valid(landscape_button):
+		landscape_button.position = Vector2(screen_size.x - 322, 18)
+	if is_instance_valid(portrait_button):
+		portrait_button.position = Vector2(screen_size.x - 162, 18)
+	if is_instance_valid(joystick_view):
+		joystick_view.queue_redraw()
+
+func _set_screen_orientation(orientation: int) -> void:
+	DisplayServer.screen_set_orientation(orientation)
 
 func _build_ui() -> void:
 	var root := Control.new()
@@ -37,23 +58,58 @@ func _build_ui() -> void:
 		label.add_theme_color_override("font_color", Color(0.82, 0.9, 1.0))
 		root.add_child(label)
 		labels[i] = label
-	var hint := Label.new()
-	hint.text = "LEFT: FLIGHT DIRECTION                         RIGHT: THROTTLE / SPEED"
-	hint.position = Vector2(screen_size.x * 0.5 - 250, screen_size.y - 28)
-	hint.add_theme_font_size_override("font_size", 12)
-	hint.add_theme_color_override("font_color", Color(0.72, 0.84, 0.96))
-	root.add_child(hint)
+	hint_label = Label.new()
+	hint_label.text = "LEFT: FLIGHT DIRECTION                         RIGHT: THROTTLE / SPEED"
+	hint_label.position = Vector2(screen_size.x * 0.5 - 250, screen_size.y - 28)
+	hint_label.add_theme_font_size_override("font_size", 12)
+	hint_label.add_theme_color_override("font_color", Color(0.72, 0.84, 0.96))
+	root.add_child(hint_label)
+
+	landscape_button = _make_orientation_button("ГОРИЗОНТАЛЬНО", Vector2(screen_size.x - 322, 18))
+	landscape_button.pressed.connect(_set_screen_orientation.bind(DisplayServer.SCREEN_LANDSCAPE))
+	root.add_child(landscape_button)
+
+	portrait_button = _make_orientation_button("ВЕРТИКАЛЬНО", Vector2(screen_size.x - 162, 18))
+	portrait_button.pressed.connect(_set_screen_orientation.bind(DisplayServer.SCREEN_PORTRAIT))
+	root.add_child(portrait_button)
 	joystick_view = Control.new()
 	joystick_view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	joystick_view.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	joystick_view.set_script(JOYSTICK_SCRIPT)
 	root.add_child(joystick_view)
-	var cross := Label.new()
-	cross.text = "⊕"
-	cross.position = Vector2(screen_size.x * 0.5 - 12, screen_size.y * 0.5 - 18)
-	cross.add_theme_font_size_override("font_size", 30)
-	cross.add_theme_color_override("font_color", Color(0.3, 0.8, 1.0, 0.7))
-	root.add_child(cross)
+	crosshair_label = Label.new()
+	crosshair_label.text = "⊕"
+	crosshair_label.position = Vector2(screen_size.x * 0.5 - 12, screen_size.y * 0.5 - 18)
+	crosshair_label.add_theme_font_size_override("font_size", 30)
+	crosshair_label.add_theme_color_override("font_color", Color(0.3, 0.8, 1.0, 0.7))
+	root.add_child(crosshair_label)
+
+func _make_orientation_button(caption: String, button_position: Vector2) -> Button:
+	var button := Button.new()
+	button.text = caption
+	button.position = button_position
+	button.size = Vector2(150, 42)
+	button.focus_mode = Control.FOCUS_NONE
+	button.add_theme_font_size_override("font_size", 12)
+	button.add_theme_color_override("font_color", Color(0.85, 0.95, 1.0))
+	button.add_theme_color_override("font_hover_color", Color.WHITE)
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color(0.025, 0.09, 0.16, 0.88)
+	normal.border_color = Color(0.2, 0.65, 0.95, 0.9)
+	normal.set_border_width_all(1)
+	normal.set_corner_radius_all(8)
+	normal.content_margin_left = 8
+	normal.content_margin_right = 8
+	normal.content_margin_top = 6
+	normal.content_margin_bottom = 6
+	button.add_theme_stylebox_override("normal", normal)
+	var hover := normal.duplicate() as StyleBoxFlat
+	hover.bg_color = Color(0.06, 0.2, 0.32, 0.96)
+	button.add_theme_stylebox_override("hover", hover)
+	var pressed := normal.duplicate() as StyleBoxFlat
+	pressed.bg_color = Color(0.08, 0.3, 0.46, 1.0)
+	button.add_theme_stylebox_override("pressed", pressed)
+	return button
 
 func _process(_delta: float) -> void:
 	if not is_instance_valid(ship):
