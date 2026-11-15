@@ -71,8 +71,8 @@ func _apply_sticks() -> void:
 	ship.steering = Vector2(-left_value.x, left_value.y)
 	ship.throttle = clampf(-right_value.y, -1.0, 1.0)
 	if is_instance_valid(joystick_view):
-		joystick_view.left_value = left_value
-		joystick_view.right_value = right_value
+		joystick_view.set("left_value", left_value)
+		joystick_view.set("right_value", right_value)
 		joystick_view.queue_redraw()
 
 func _input(event: InputEvent) -> void:
