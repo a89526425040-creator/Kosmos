@@ -48,15 +48,22 @@ func _physics_process(delta: float) -> void:
 	var earth_center := Vector3(0, 0, -7000)
 	var distance_km: float = maxf(100.0, global_position.distance_to(earth_center))
 	var radius_m: float = distance_km * 1000.0
-	var gravity: Vector3 = -((global_position - earth_center).normalized()) * earth_mu / (radius_m * radius_m)
+	var radial_up: Vector3 = (global_position - earth_center).normalized()
+	var altitude_m: float = maxf(0.0, (distance_km - 6371.0) * 1000.0)
+	var gravity: Vector3 = -radial_up * earth_mu / (radius_m * radius_m)
 	apply_central_force(gravity * mass)
 	if fuel > 0.0 and abs(thrust_cmd) > 0.001:
 		var thrust: float = max_thrust if thrust_cmd > 0.0 else reverse_thrust
 		apply_central_force(-basis_now.z * thrust * abs(thrust_cmd))
+		# Assist takeoff while the spacecraft is still close to the surface.
+		# Without this radial component, a horizontally oriented ship cannot lift off.
+		if thrust_cmd > 0.0 and altitude_m < 80.0:
+			var lift_factor: float = 1.0 - clampf(altitude_m / 80.0, 0.0, 1.0)
+			apply_central_force(radial_up * max_thrust * 1.4 * clampf(thrust_cmd, 0.0, 1.0) * lift_factor)
 		var used: float = thrust * absf(thrust_cmd) / (exhaust_velocity * 9.81) * delta
 		fuel = max(0.0, fuel - used)
 		mass = max(3800.0, mass - used)
-		delta_v += thrust * abs(thrust_cmd) / mass * delta
+		delta_v += thrust * absf(thrust_cmd) / mass * delta
 		engine_on = true
 	else:
 		engine_on = false
@@ -64,7 +71,6 @@ func _physics_process(delta: float) -> void:
 		apply_central_force((basis_now.x * side + basis_now.y * vertical) * rcs_force)
 	if abs(steer.x) + abs(steer.y) + abs(roll) > 0.001:
 		apply_torque(basis_now * Vector3(steer.y, steer.x, roll) * torque_strength)
-	var altitude_m: float = maxf(0.0, (distance_km - 6371.0) * 1000.0)
 	var density: float = 1.225 * exp(-altitude_m / atmosphere_height) if altitude_m < atmosphere_limit else 0.0
 	if density > 0.00001:
 		var drag: Vector3 = -0.5 * density * linear_velocity.length() * linear_velocity * drag_coefficient * reference_area
