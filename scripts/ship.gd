@@ -24,8 +24,11 @@ var engine_on := false
 
 func _ready() -> void:
 	mass = 12000.0
-	linear_velocity = Vector3(7545.0, 0.0, 0.0)
-	last_velocity = linear_velocity
+	linear_velocity = Vector3.ZERO
+	angular_velocity = Vector3.ZERO
+	last_velocity = Vector3.ZERO
+	freeze = true
+	freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
 	continuous_cd = true
 	can_sleep = false
 
@@ -39,6 +42,8 @@ func _physics_process(delta: float) -> void:
 	var roll := roll_input + roll_cmd
 	var side := lateral_input.x + Input.get_action_strength("ui_right") - Input.get_action_strength("ui_left")
 	var vertical := lateral_input.y + Input.get_action_strength("ui_up") - Input.get_action_strength("ui_down")
+	if freeze and (absf(thrust_cmd) > 0.001 or absf(steer.x) + absf(steer.y) + absf(roll) + absf(side) + absf(vertical) > 0.001):
+		freeze = false
 	var basis_now := global_basis
 	var earth_center := Vector3(0, 0, -7000)
 	var distance_km: float = maxf(100.0, global_position.distance_to(earth_center))
