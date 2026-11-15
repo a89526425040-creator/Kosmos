@@ -13,7 +13,7 @@ func _ready() -> void:
 	_build_ship()
 	_build_lighting()
 	_build_camera()
-	var hud := CanvasLayer.new()
+	var hud: Variant = CanvasLayer.new()
 	hud.set_script(UI_SCRIPT)
 	add_child(hud)
 	hud.ship = ship
