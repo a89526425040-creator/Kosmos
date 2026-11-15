@@ -318,5 +318,4 @@ func _process(delta: float) -> void:
 		var target := ship.global_position + ship.global_basis * Vector3(0, 5.0, 18.0)
 		camera.global_position = camera.global_position.lerp(target, 1.0 - exp(-4.0 * delta))
 		camera.look_at(ship.global_position, ship.global_basis.y)
-	if is_instance_valid(earth):
 	_update_atmosphere()
