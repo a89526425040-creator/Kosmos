@@ -104,9 +104,10 @@ func _build_earth() -> void:
 
 func _terrain_height(x: float, z: float) -> float:
 	var distance := Vector2(x, z).length()
-	var blend := smoothstep(34.0, 95.0, distance)
-	var rolling := sin(x * 0.021) * 2.8 + sin(z * 0.017 + x * 0.008) * 3.6 + sin((x + z) * 0.043) * 1.1
-	var hills := maxf(0.0, sin(x * 0.009 + 1.4) * cos(z * 0.011 - 0.7)) * 9.0
+	var t := clampf((distance - 8.0) / 16.0, 0.0, 1.0)
+	var blend := t * t * (3.0 - 2.0 * t)
+	var rolling := sin(x * 0.065) * 0.32 + sin(z * 0.052 + x * 0.018) * 0.38 + sin((x + z) * 0.13) * 0.12
+	var hills := maxf(0.0, sin(x * 0.028 + 1.4) * cos(z * 0.031 - 0.7)) * 0.75
 	return (rolling + hills) * blend
 
 func _terrain_surface_y(x: float, z: float) -> float:
@@ -118,7 +119,7 @@ func _build_local_terrain() -> void:
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var segments := 80
-	var extent := 720.0
+	var extent := 160.0
 	var step := extent * 2.0 / float(segments)
 	for iz in range(segments):
 		for ix in range(segments):
@@ -150,14 +151,14 @@ func _build_vegetation() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 90421
 	var trunk_mesh := CylinderMesh.new()
-	trunk_mesh.top_radius = 0.18
-	trunk_mesh.bottom_radius = 0.30
-	trunk_mesh.height = 2.6
+	trunk_mesh.top_radius = 0.08
+	trunk_mesh.bottom_radius = 0.12
+	trunk_mesh.height = 0.28
 	var leaf_mesh := ConeMesh.new()
-	leaf_mesh.bottom_radius = 1.15
-	leaf_mesh.height = 3.8
+	leaf_mesh.bottom_radius = 0.38
+	leaf_mesh.height = 0.42
 	var grass_mesh := PrismMesh.new()
-	grass_mesh.size = Vector3(0.18, 0.55, 0.12)
+	grass_mesh.size = Vector3(0.035, 0.10, 0.025)
 	var trunk_mm := MultiMesh.new()
 	trunk_mm.transform_format = MultiMesh.TRANSFORM_3D
 	trunk_mm.mesh = trunk_mesh
@@ -170,22 +171,22 @@ func _build_vegetation() -> void:
 	var trunks: Array[Transform3D] = []
 	var leaves: Array[Transform3D] = []
 	var grass: Array[Transform3D] = []
-	for i in range(105):
+	for i in range(85):
 		var angle := rng.randf_range(0.0, TAU)
-		var radius := rng.randf_range(65.0, 680.0)
+		var radius := rng.randf_range(14.0, 150.0)
 		var x := cos(angle) * radius
 		var z := sin(angle) * radius
 		var y := _terrain_surface_y(x, z)
 		var scale := rng.randf_range(0.8, 1.8)
-		trunks.append(Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * scale), Vector3(x, y + 1.3 * scale, z)))
-		leaves.append(Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * scale), Vector3(x, y + 3.95 * scale, z)))
-	for i in range(1250):
-		var x := rng.randf_range(-700.0, 700.0)
+		trunks.append(Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * scale), Vector3(x, y + 0.14 * scale, z)))
+		leaves.append(Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * scale), Vector3(x, y + 0.49 * scale, z)))
+	for i in range(850):
+		var x := rng.randf_range(-155.0, 155.0)
 		var z := rng.randf_range(-700.0, 700.0)
-		if Vector2(x, z).length() < 38.0:
+		if Vector2(x, z).length() < 10.0:
 			continue
 		var scale := rng.randf_range(0.7, 1.5)
-		grass.append(Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * scale), Vector3(x, _terrain_surface_y(x, z) + 0.22, z)))
+		grass.append(Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * scale), Vector3(x, _terrain_surface_y(x, z) + 0.05, z)))
 	trunk_mm.instance_count = trunks.size()
 	leaf_mm.instance_count = leaves.size()
 	grass_mm.instance_count = grass.size()
@@ -231,7 +232,7 @@ func _build_ship() -> void:
 	ship = RigidBody3D.new()
 	ship.name = "Spacecraft"
 	ship.set_script(SHIP_SCRIPT)
-	ship.position = Vector3(0, 6371.8, -7000.0)
+	ship.position = Vector3(0, 6371.75, -7000.0)
 	ship.mass = 12000.0
 	ship.gravity_scale = 0.0
 	ship.linear_damp = 0.0
@@ -317,5 +318,4 @@ func _process(delta: float) -> void:
 		camera.global_position = camera.global_position.lerp(target, 1.0 - exp(-4.0 * delta))
 		camera.look_at(ship.global_position, ship.global_basis.y)
 	if is_instance_valid(earth):
-		earth.rotate_y(0.0007)
 	_update_atmosphere()
