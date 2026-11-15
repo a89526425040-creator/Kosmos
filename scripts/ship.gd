@@ -75,7 +75,7 @@ func speed_kms() -> float:
 	return linear_velocity.length() / 1000.0
 
 func gravity_value() -> float:
-	var r := max(100000.0, global_position.distance_to(Vector3(0, 0, -7000)) * 1000.0)
+	var r: float = maxf(100000.0, global_position.distance_to(Vector3(0, 0, -7000)) * 1000.0)
 	return earth_mu / (r * r)
 
 func air_density() -> float:
