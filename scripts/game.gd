@@ -42,12 +42,12 @@ func _build_lighting() -> void:
 
 func _build_earth() -> void:
 	earth = Node3D.new()
-	earth.position = Vector3(0, -1800, -2200)
+	earth.position = Vector3(0, 0, -7000)
 	add_child(earth)
 	var planet := MeshInstance3D.new()
 	var sphere := SphereMesh.new()
-	sphere.radius = 1800.0
-	sphere.height = 3600.0
+	sphere.radius = 6371.0
+	sphere.height = 12742.0
 	sphere.radial_segments = 96
 	sphere.rings = 48
 	planet.mesh = sphere
@@ -62,8 +62,8 @@ func _build_earth() -> void:
 	earth.add_child(planet)
 	var cloud := MeshInstance3D.new()
 	var cloud_mesh := SphereMesh.new()
-	cloud_mesh.radius = 1822.0
-	cloud_mesh.height = 3644.0
+	cloud_mesh.radius = 6410.0
+	cloud_mesh.height = 12820.0
 	cloud_mesh.radial_segments = 96
 	cloud_mesh.rings = 48
 	cloud.mesh = cloud_mesh
@@ -76,8 +76,8 @@ func _build_earth() -> void:
 	earth.add_child(cloud)
 	var atmo := MeshInstance3D.new()
 	var atmo_mesh := SphereMesh.new()
-	atmo_mesh.radius = 1870.0
-	atmo_mesh.height = 3740.0
+	atmo_mesh.radius = 6500.0
+	atmo_mesh.height = 13000.0
 	atmo_mesh.radial_segments = 96
 	atmo_mesh.rings = 48
 	atmo.mesh = atmo_mesh
