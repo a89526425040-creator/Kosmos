@@ -84,6 +84,6 @@ func _input(event: InputEvent) -> void:
 		if not event.pressed:
 			ship.steering = Vector2.ZERO
 	elif event is InputEventScreenDrag:
-		var p := event.position
+		var p: Vector2 = event.position
 		var center_x := screen_size.x * (0.25 if p.x < screen_size.x * 0.5 else 0.75)
 		ship.steering = Vector2(-(p.x - center_x) / 180.0, (p.y - screen_size.y * 0.7) / 180.0).limit_length(1.0)
