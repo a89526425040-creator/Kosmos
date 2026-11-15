@@ -8,7 +8,8 @@ extends RigidBody3D
 @export var fuel: float = 8200.0
 @export var exhaust_velocity: float = 3200.0
 @export var earth_mu: float = 3.986004e14
-@export var atmosphere_height: float = 120000.0
+@export var atmosphere_height: float = 8500.0
+@export var atmosphere_limit: float = 120000.0
 @export var drag_coefficient: float = 0.45
 @export var reference_area: float = 18.0
 
@@ -23,6 +24,7 @@ var engine_on := false
 
 func _ready() -> void:
 	mass = 12000.0
+	linear_velocity = Vector3(7545.0, 0.0, 0.0)
 	last_velocity = linear_velocity
 	continuous_cd = true
 	can_sleep = false
@@ -58,7 +60,7 @@ func _physics_process(delta: float) -> void:
 	if abs(steer.x) + abs(steer.y) + abs(roll) > 0.001:
 		apply_torque(basis_now * Vector3(steer.y, steer.x, roll) * torque_strength)
 	var altitude_m := max(0.0, (distance_km - 6371.0) * 1000.0)
-	var density := 1.225 * exp(-altitude_m / atmosphere_height) if altitude_m < atmosphere_height * 8.0 else 0.0
+	var density := 1.225 * exp(-altitude_m / atmosphere_height) if altitude_m < atmosphere_limit else 0.0
 	if density > 0.00001:
 		var drag := -0.5 * density * linear_velocity.length() * linear_velocity * drag_coefficient * reference_area
 		apply_central_force(drag)
@@ -78,4 +80,4 @@ func gravity_value() -> float:
 
 func air_density() -> float:
 	var h := altitude_km() * 1000.0
-	return 1.225 * exp(-h / atmosphere_height) if h < atmosphere_height * 8.0 else 0.0
+	return 1.225 * exp(-h / atmosphere_height) if h < atmosphere_limit else 0.0
