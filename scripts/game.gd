@@ -60,6 +60,14 @@ func _build_earth() -> void:
 	mat.emission_energy_multiplier = 0.22
 	planet.material_override = mat
 	earth.add_child(planet)
+	var ground_body := StaticBody3D.new()
+	ground_body.name = "EarthGroundCollision"
+	var ground_shape := CollisionShape3D.new()
+	var ground_sphere := SphereShape3D.new()
+	ground_sphere.radius = 6371.0
+	ground_shape.shape = ground_sphere
+	ground_body.add_child(ground_shape)
+	earth.add_child(ground_body)
 	var cloud := MeshInstance3D.new()
 	var cloud_mesh := SphereMesh.new()
 	cloud_mesh.radius = 6410.0
@@ -93,7 +101,7 @@ func _build_ship() -> void:
 	ship = RigidBody3D.new()
 	ship.name = "Spacecraft"
 	ship.set_script(SHIP_SCRIPT)
-	ship.position = Vector3(0, 0, 0)
+	ship.position = Vector3(0, 6371.8, -7000.0)
 	ship.mass = 12000.0
 	ship.gravity_scale = 0.0
 	ship.linear_damp = 0.0
